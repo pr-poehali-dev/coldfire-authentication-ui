@@ -30,7 +30,9 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-coldfire-black via-coldfire-dark to-coldfire-gray p-4">
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32"><circle cx="16" cy="16" r="1" fill="%23FF6B35" opacity="0.1"/></svg>')] opacity-20"></div>
+      <div className="absolute inset-0 opacity-20" style={{
+        backgroundImage: `url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32'><circle cx='16' cy='16' r='1' fill='%23FF6B35' opacity='0.1'/></svg>")`
+      }}></div>
       
       <Card className="w-full max-w-md coldfire-card animate-fade-in relative">
         <CardHeader className="text-center space-y-4">
