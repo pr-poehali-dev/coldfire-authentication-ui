@@ -3,10 +3,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
 
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: 'user' | 'moderator';
+  station: string;
+  avatar_url: string;
+  warning_count: number;
+}
+
 interface AuthFormProps {
-  onLogin: (username: string, password: string, role: 'user' | 'moderator') => void;
+  onLogin: (user: User, token: string) => void;
 }
 
 export default function AuthForm({ onLogin }: AuthFormProps) {
@@ -15,17 +27,50 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    setTimeout(() => {
-      // Demo: если пользователь вводит "moderator" как логин - даем роль модератора
-      const role = username.toLowerCase() === 'moderator' ? 'moderator' : 'user';
-      onLogin(username, password, role);
+    try {
+      const response = await fetch('https://functions.poehali.dev/2c505459-e643-4850-94ac-7305ff8d3734', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: isLogin ? 'login' : 'register',
+          username,
+          password,
+          email: !isLogin ? email : undefined
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast({
+          title: isLogin ? "Вход выполнен!" : "Регистрация успешна!",
+          description: `Добро пожаловать в метро${data.user.station ? `, сталкер со станции ${data.user.station}` : ''}!`,
+        });
+        onLogin(data.user, data.token);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Ошибка",
+          description: data.error || 'Произошла ошибка при входе',
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка подключения",
+        description: 'Не удается подключиться к серверу',
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -124,11 +169,20 @@ export default function AuthForm({ onLogin }: AuthFormProps) {
             </button>
           </div>
 
-          {/* Demo hints */}
-          <div className="text-xs text-gray-500 font-mono space-y-1 border-t border-coldfire-gray/20 pt-4">
-            <p>🔧 Демо режим:</p>
-            <p>• Логин "moderator" → роль модератора</p>
-            <p>• Любой другой логин → роль пользователя</p>
+          {/* Demo accounts */}
+          <div className="text-xs text-gray-500 font-mono space-y-2 border-t border-coldfire-gray/20 pt-4">
+            <p className="text-coldfire-orange font-bold">🔧 Тестовые аккаунты:</p>
+            <div className="grid grid-cols-1 gap-2">
+              <Badge variant="outline" className="justify-start text-[10px] p-1">
+                <Icon name="Shield" className="w-3 h-3 mr-1 text-coldfire-orange" />
+                artyom_spartan / spartan123
+              </Badge>
+              <Badge variant="outline" className="justify-start text-[10px] p-1">
+                <Icon name="Users" className="w-3 h-3 mr-1 text-blue-400" />
+                newbie_stalker / metro2033
+              </Badge>
+            </div>
+            <p className="text-[10px] text-gray-600">Или создайте новый аккаунт</p>
           </div>
         </CardContent>
       </Card>

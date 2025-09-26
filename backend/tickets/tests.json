@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Get tickets for moderator",
+      "method": "GET",
+      "path": "/",
+      "query": "role=moderator",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "tickets": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Create new ticket",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "body": {
+        "title": "Test ticket",
+        "category": "technical",
+        "priority": "medium"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "ticket": {
+          "title": "string",
+          "status": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

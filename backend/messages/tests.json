@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Get messages for ticket",
+      "method": "GET",
+      "path": "/",
+      "query": "ticket_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "messages": []
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Send new message",
+      "method": "POST",
+      "path": "/",
+      "headers": {
+        "X-User-Id": "1"
+      },
+      "body": {
+        "action": "send_message",
+        "ticket_id": 1,
+        "content": "Test message",
+        "message_type": "text"
+      },
+      "expectedStatus": 201,
+      "expectedBody": {
+        "success": true,
+        "message": {
+          "content": "string"
+        }
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
