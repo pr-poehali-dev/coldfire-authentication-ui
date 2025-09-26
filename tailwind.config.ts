@@ -19,6 +19,15 @@ export default {
 		},
 		extend: {
 			colors: {
+				// Coldfire Project theme - Metro 2033 inspired
+				coldfire: {
+					black: "#1A1A1A",
+					dark: "#2D2D2D", 
+					gray: "#404040",
+					orange: "#FF6B35",
+					rust: "#d97514",
+					blue: "#4A90E2",
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -68,27 +77,50 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			fontFamily: {
+				mono: ['JetBrains Mono', 'monospace'],
+				industrial: ['Orbitron', 'monospace'],
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
-						height: '0'
+						height: '0',
+						opacity: '0'
 					},
 					to: {
-						height: 'var(--radix-accordion-content-height)'
+						height: 'var(--radix-accordion-content-height)',
+						opacity: '1'
 					}
 				},
 				'accordion-up': {
 					from: {
-						height: 'var(--radix-accordion-content-height)'
+						height: 'var(--radix-accordion-content-height)',
+						opacity: '1'
 					},
 					to: {
-						height: '0'
+						height: '0',
+						opacity: '0'
 					}
-				}
+				},
+				'fade-in': {
+					'0%': { opacity: '0', transform: 'translateY(10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' },
+				},
+				'slide-in-right': {
+					'0%': { transform: 'translateX(100%)' },
+					'100%': { transform: 'translateX(0)' },
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px #FF6B35' },
+					'50%': { boxShadow: '0 0 20px #FF6B35, 0 0 30px #FF6B35' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'slide-in-right': 'slide-in-right 0.3s ease-out',
+				'glow': 'glow 2s ease-in-out infinite',
 			}
 		}
 	},
