@@ -1,0 +1,26 @@
+{
+  "tests": [
+    {
+      "name": "Get moderator stats",
+      "method": "GET",
+      "path": "/?moderator_id=1",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "stats": "object",
+        "top_moderators": "array",
+        "system_stats": "object"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing moderator_id",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "moderator_id is required"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

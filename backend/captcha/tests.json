@@ -1,0 +1,27 @@
+{
+  "tests": [
+    {
+      "name": "Generate captcha",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "session_token": "string",
+        "captcha_image": "string",
+        "expires_in": 600
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Verify captcha - missing data",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Missing session_token or captcha_input"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

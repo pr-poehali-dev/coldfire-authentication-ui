@@ -63,7 +63,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             cur.execute("""
                 SELECT id, username, email, role, is_banned, station, avatar_url, warning_count
-                FROM users 
+                FROM t_p7304060_coldfire_authenticat.users 
                 WHERE username = %s AND password_hash = %s
             """, (username, password_hash))
             
@@ -85,8 +85,12 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'error': 'Аккаунт заблокирован'})
                 }
             
-            # Обновляем время последнего входа
-            cur.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = %s", (user_id,))
+            # Обновляем время последнего входа и счетчик входов
+            cur.execute("""
+                UPDATE t_p7304060_coldfire_authenticat.users 
+                SET last_login = CURRENT_TIMESTAMP, total_logins = COALESCE(total_logins, 0) + 1
+                WHERE id = %s
+            """, (user_id,))
             conn.commit()
             
             return {
@@ -110,16 +114,66 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         elif action == 'register':
             # Регистрация
             email = body_data.get('email', '').strip()
+            station = body_data.get('station', '').strip()
+            captcha_token = body_data.get('captcha_token', '').strip()
             
-            if not email:
+            if not email or not station:
                 return {
                     'statusCode': 400,
                     'headers': {'Access-Control-Allow-Origin': '*'},
-                    'body': json.dumps({'error': 'Email обязателен для регистрации'})
+                    'body': json.dumps({'error': 'Email и станция обязательны для регистрации'})
                 }
             
+            if not captcha_token:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Пройдите проверку капчи'})
+                }
+            
+            # Проверяем капчу
+            cur.execute("""
+                SELECT captcha_text, is_used, expires_at 
+                FROM t_p7304060_coldfire_authenticat.captcha_sessions 
+                WHERE session_token = %s
+            """, (captcha_token,))
+            
+            captcha_result = cur.fetchone()
+            if not captcha_result:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Недействительная капча'})
+                }
+            
+            captcha_text, is_used, expires_at = captcha_result
+            
+            if is_used:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Капча уже использована'})
+                }
+            
+            # Проверяем срок действия
+            cur.execute("SELECT NOW()")
+            current_time = cur.fetchone()[0]
+            if current_time > expires_at:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Капча просрочена'})
+                }
+            
+            # Помечаем капчу как использованную
+            cur.execute("""
+                UPDATE t_p7304060_coldfire_authenticat.captcha_sessions 
+                SET is_used = true 
+                WHERE session_token = %s
+            """, (captcha_token,))
+            
             # Проверка существования пользователя
-            cur.execute("SELECT id FROM users WHERE username = %s OR email = %s", (username, email))
+            cur.execute("SELECT id FROM t_p7304060_coldfire_authenticat.users WHERE username = %s OR email = %s", (username, email))
             if cur.fetchone():
                 return {
                     'statusCode': 409,
@@ -129,15 +183,23 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             # Создание нового пользователя
             password_hash = hashlib.sha256(password.encode()).hexdigest()
-            station = 'Проспект Мира'  # Начальная станция для новичков
             
             cur.execute("""
-                INSERT INTO users (username, email, password_hash, role, station, avatar_url)
-                VALUES (%s, %s, %s, 'user', %s, '/avatars/default.jpg')
+                INSERT INTO t_p7304060_coldfire_authenticat.users 
+                (username, email, password_hash, role, station, avatar_url, total_logins, email_verified)
+                VALUES (%s, %s, %s, 'user', %s, '/avatars/default.jpg', 1, true)
                 RETURNING id
             """, (username, email, password_hash, station))
             
             user_id = cur.fetchone()[0]
+            
+            # Обновляем статистику входов
+            cur.execute("""
+                UPDATE t_p7304060_coldfire_authenticat.users 
+                SET last_login = CURRENT_TIMESTAMP, total_logins = total_logins + 1 
+                WHERE id = %s
+            """, (user_id,))
+            
             conn.commit()
             
             return {

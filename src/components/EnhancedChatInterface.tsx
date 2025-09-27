@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import Icon from '@/components/ui/icon';
+import ModeratorPanel from './ModeratorPanel';
 
 interface User {
   id: number;
@@ -67,7 +68,7 @@ export default function EnhancedChatInterface({ user, token, onLogout }: Enhance
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [ticketsLoading, setTicketsLoading] = useState(true);
-  const [showUserPanel, setShowUserPanel] = useState(false);
+  const [showModeratorPanel, setShowModeratorPanel] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -360,7 +361,7 @@ export default function EnhancedChatInterface({ user, token, onLogout }: Enhance
             <div className="flex items-center space-x-2">
               {user.role === 'moderator' && (
                 <Button
-                  onClick={() => setShowUserPanel(!showUserPanel)}
+                  onClick={() => setShowModeratorPanel(!showModeratorPanel)}
                   variant="outline"
                   size="sm"
                   className="border-coldfire-orange/50 text-coldfire-orange hover:bg-coldfire-orange/10 font-mono"
@@ -719,6 +720,21 @@ export default function EnhancedChatInterface({ user, token, onLogout }: Enhance
           )}
         </div>
       </div>
+
+      {/* Модальная панель модератора */}
+      {showModeratorPanel && user.role === 'moderator' && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-coldfire-dark border border-coldfire-gray/30 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <ModeratorPanel
+                user={user}
+                token={token}
+                onClose={() => setShowModeratorPanel(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
